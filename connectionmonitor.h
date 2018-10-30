@@ -2,19 +2,24 @@
 #define CONNECTIONMONITOR_H
 
 #include "serialport/serialport.h"
+#include "connectionscreen.h"
 
 #include <QString>
 
 class ConnectionMonitor
 {
 private:
-    SerialPort Motor, Sensor, MCU ;
+    ConnectionScreen * Display ;
+    SerialPort Motor, Sensor, Mcu ;
+    bool MotorConnected = NOTCONNECTED, SensorConnected =NOTCONNECTED, McuConnected = NOTCONNECTED ;
 public:
     ConnectionMonitor();
 
-    int ConnectMotor(QString port) ;
-    int ConnectSensor(QString port) ;
-    int ConnectMCU(QString port) ;
+    void setDisplay(ConnectionScreen *extDisplay) ;
+
+    void ConnectMotor(QString port) ;
+    void ConnectSensor(QString port) ;
+    void ConnectMCU(QString port) ;
 
 };
 

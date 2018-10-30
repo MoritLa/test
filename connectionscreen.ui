@@ -85,7 +85,7 @@
     <string>Connect</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="ConnectMcu">
    <property name="geometry">
     <rect>
      <x>190</x>
@@ -157,7 +157,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>pushButton</sender>
+   <sender>ConnectMcu</sender>
    <signal>released()</signal>
    <receiver>ConnectionScreen</receiver>
    <slot>MCU_cb()</slot>

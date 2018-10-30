@@ -1,29 +1,116 @@
 #include "connectionmonitor.h"
 
-#define MY_BAUD    115200
+#define MY_BAUD    57600 //115200
 
+//-------Public functions
 ConnectionMonitor::ConnectionMonitor()
 {
 
 }
 
-int ConnectionMonitor::ConnectMotor(QString port)
+void ConnectionMonitor::setDisplay(ConnectionScreen *extDisplay)
 {
-    Motor.setBaudRate(MY_BAUD) ;
-    Motor.setCommPort(port.toStdString()) ;
-    return Motor.connect() ;
+    Display = extDisplay ;
 }
 
-int ConnectionMonitor::ConnectSensor(QString port)
+void ConnectionMonitor::ConnectMotor(QString port)
 {
-    Sensor.setBaudRate(MY_BAUD) ;
-    Sensor.setCommPort(port.toStdString()) ;
-    return Sensor.connect() ;
+    Display->changeButton(MOTOR, CONNECTING) ;
+    if(MotorConnected == NOTCONNECTED)
+    {
+        Motor.setBaudRate(MY_BAUD) ;
+        Motor.setCommPort(port.toStdString()) ;
+        if(Motor.connect())
+        {
+            Display->changeButton(MOTOR, NOTCONNECTED) ;
+            MotorConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(MOTOR,CONNECTED) ;
+            MotorConnected = CONNECTED ;
+        }
+    }
+    else
+    {
+        if(!Motor.disconnect())
+        {
+            Display->changeButton(MOTOR, NOTCONNECTED) ;
+            MotorConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(MOTOR,CONNECTED) ;
+            MotorConnected = CONNECTED ;
+        }
+    }
 }
 
-int ConnectionMonitor::ConnectMCU(QString port)
+void ConnectionMonitor::ConnectSensor(QString port)
 {
-    MCU.setBaudRate(MY_BAUD) ;
-    MCU.setCommPort(port.toStdString()) ;
-    return MCU.connect() ;
+    Display->changeButton(SENSOR, CONNECTING) ;
+    if (SensorConnected == NOTCONNECTED)
+    {
+        Sensor.setBaudRate(MY_BAUD) ;
+        Sensor.setCommPort(port.toStdString()) ;
+        if(Sensor.connect())
+        {
+            Display->changeButton(SENSOR, NOTCONNECTED) ;
+            SensorConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(SENSOR,CONNECTED) ;
+            SensorConnected = CONNECTED ;
+        }
+    }
+    else
+    {
+        if(!Sensor.disconnect())
+        {
+            Display->changeButton(SENSOR, NOTCONNECTED) ;
+            SensorConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(SENSOR,CONNECTED) ;
+            SensorConnected = CONNECTED ;
+        }
+    }
 }
+
+void ConnectionMonitor::ConnectMCU(QString port)
+{
+    Display->changeButton(MCU, CONNECTING) ;
+    if(McuConnected == NOTCONNECTED)
+    {
+        Mcu.setBaudRate(MY_BAUD) ;
+        Mcu.setCommPort(port.toStdString()) ;
+        if(Mcu.connect())
+        {
+            Display->changeButton(MCU, NOTCONNECTED) ;
+            McuConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(MCU,CONNECTED) ;
+            McuConnected = CONNECTED ;
+        }
+    }
+    else
+    {
+        if(!Mcu.disconnect())
+        {
+            Display->changeButton(MCU, NOTCONNECTED) ;
+            McuConnected = NOTCONNECTED ;
+        }
+        else
+        {
+            Display->changeButton(MCU,CONNECTED) ;
+            McuConnected = CONNECTED ;
+        }
+    }
+}
+
+//--------Private functions
+

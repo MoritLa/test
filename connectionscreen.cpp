@@ -42,24 +42,26 @@ void ConnectionScreen::changeButton(int device, int state)
     switch (device)
     {
     case MOTOR  :
-        if (state == CONNECTED)
-            ui->ConnectMotor->setText("Disconnect") ;
-        else
-            ui->ConnectMotor->setText("Connect") ;
-        break ;
+        switch (state)
+        {
+        case CONNECTED:     ui->ConnectMotor->setText("Disconnect") ;   break ;
+        case CONNECTING:    ui->ConnectMotor->setText("...") ;          break ;
+        case NOTCONNECTED:  ui->ConnectMotor->setText("Connect") ;      break ;
+        }break ;
     case SENSOR :
-        if (state == CONNECTED)
-            ui->ConnectMotor->setText("Disconnect") ;
-        else
-            ui->ConnectMotor->setText("Connect") ;
-        break ;
+        switch (state)
+        {
+        case CONNECTED:     ui->ConnectSensor->setText("Disconnect") ;   break ;
+        case CONNECTING:    ui->ConnectSensor->setText("...") ;          break ;
+        case NOTCONNECTED:  ui->ConnectSensor->setText("Connect") ;      break ;
+        }break ;
     case MCU    :
-        if (state == CONNECTED)
-            ui->ConnectMotor->setText("Disconnect") ;
-        else
-            ui->ConnectMotor->setText("Connect") ;
-        break ;
+        switch (state)
+        {
+        case CONNECTED:     ui->ConnectMcu->setText("Disconnect") ;   break ;
+        case CONNECTING:    ui->ConnectMcu->setText("...") ;          break ;
+        case NOTCONNECTED:  ui->ConnectMcu->setText("Connect") ;      break ;
+        }break ;
     default     : break ;
     }
-    ui->ConnectMotor->setText("Ho") ;
 }

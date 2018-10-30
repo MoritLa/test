@@ -8,8 +8,9 @@
 #define SENSOR  1
 #define MCU     2
 
-#define CONNECTED       1
 #define NOTCONNECTED    0
+#define CONNECTED       1
+#define CONNECTING      2
 
 typedef void (*ConnectionCallbackFP)(QString port) ;
 

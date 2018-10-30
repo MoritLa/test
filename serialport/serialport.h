@@ -1,9 +1,9 @@
 #ifndef SERIALPORT_H
 #define SERIALPORT_H
 
-#if 1
-	#include <windows.h>
-#endif
+
+#include <windows.h>
+
 #include <string>
 
 //! This class interfaces a serial port both under Windows and Linux
@@ -50,13 +50,10 @@ protected:
 	unsigned	mBaudRate;
 	char 		mParity, mStopBits, mByteSize;
 	bool 		mConnected;
-#ifdef WIN32
+
 	HANDLE 		mHandle;
 	DCB				mDcb;
 	COMMTIMEOUTS  mTimeOuts;
-#else
-	int				mFileDesc;
-#endif
 };
 
 #endif /* SERIALPORT_H */

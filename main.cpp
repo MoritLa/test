@@ -5,6 +5,9 @@
 
 #include <iostream>
 #include <QApplication>
+#include <QThread>
+#include <QObject>
+
 namespace
 {
     static infoScreen *InfoScreen ;
@@ -13,46 +16,40 @@ namespace
 
     static ConnectionMonitor *EPuckMonitor ;
 }
+
 // callback functions
 void motor_cb(QString port)
 {
-    if(EPuckMonitor->ConnectMotor(port))
-        Connection->changeButton(MOTOR, NOTCONNECTED) ;
-    else
-        Connection->changeButton(MOTOR, CONNECTED) ;
+    EPuckMonitor->ConnectMotor(port) ;
 }
 
 void sensor_cb(QString port)
 {
-    if(EPuckMonitor->ConnectSensor(port))
-        Connection->changeButton(MOTOR, NOTCONNECTED) ;
-    else
-        Connection->changeButton(MOTOR, CONNECTED) ;
+    EPuckMonitor->ConnectSensor(port) ;
 }
 
 void MCU_cb(QString port)
 {
-    if(EPuckMonitor->ConnectMCU(port))
-        Connection->changeButton(MOTOR, NOTCONNECTED) ;
-    else
-        Connection->changeButton(MOTOR, CONNECTED) ;
+    EPuckMonitor->ConnectMCU(port) ;
 }
 
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+
     InfoScreen = new infoScreen ;
     Cockpit = new CockpitScreen;
     Connection = new ConnectionScreen ;
+    EPuckMonitor = new ConnectionMonitor ;
 
     Connection->setCallbacks(motor_cb, sensor_cb, MCU_cb) ;
 
+    EPuckMonitor->setDisplay(Connection) ;
 
     InfoScreen->show() ;
     Cockpit->show() ;
     Connection->show() ;
-
     return a.exec();
 }
 

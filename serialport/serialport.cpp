@@ -1,13 +1,4 @@
-#if 1
-    #include <windows.h>
-#else
-    #include <stdio.h>
-    #include <fcntl.h>
-    #include <termios.h>
-    #include <unistd.h>
-    #include <sys/ioctl.h>
-    #include <time.h>
-#endif
+#include <windows.h>
 
 #include "serialport.h"
 #include <iostream>
@@ -18,18 +9,12 @@ SerialPort::SerialPort()
 {
     mBuffer = new char[SERIAL_BUFFERLEN];
 
-#ifdef WIN32
     mPort = "COM1";
     mParity = NOPARITY;
     mByteSize = 8;
 
     mStopBits = ONESTOPBIT;
-#else
-    mPort = "/dev/ttyS0";
-    mStopBits = 1;
 
-    mFileDesc = -1;
-#endif
 
     mBaudRate = 57600;
     mConnected = false;
@@ -39,7 +24,7 @@ SerialPort::SerialPort(char stopBits, unsigned baudRate)
 {
     mBuffer = new char[SERIAL_BUFFERLEN];
 
-#ifdef WIN32
+
     mPort = "COM1";
     mParity = NOPARITY;
     mByteSize = 8;
@@ -48,12 +33,6 @@ SerialPort::SerialPort(char stopBits, unsigned baudRate)
         mStopBits = TWOSTOPBITS;
     else
         mStopBits = ONESTOPBIT;
-#else
-    mPort = "/dev/ttyS0";
-    mStopBits = stopBits;
-
-    mFileDesc = -1;
-#endif
 
     mBaudRate = baudRate;
     mConnected = false;
@@ -63,7 +42,6 @@ SerialPort::SerialPort(char stopBits, unsigned baudRate, std::string    port)
 {
     mBuffer = new char[SERIAL_BUFFERLEN];
 
-#ifdef WIN32
     mPort = port;
     mParity = NOPARITY;
     mByteSize = 8;
@@ -72,22 +50,7 @@ SerialPort::SerialPort(char stopBits, unsigned baudRate, std::string    port)
         mStopBits = TWOSTOPBITS;
     else
         mStopBits = ONESTOPBIT;
-#else
-    if(port == "COM1")
-        mPort = "/dev/ttyS0";
-    else if(port == "COM2")
-        mPort = "/dev/ttyS1";
-    else if(port == "COM3")
-        mPort = "/dev/ttyS2";
-    else if(port == "COM4")
-        mPort = "/dev/ttyS3";
-    else
-        mPort = port;
 
-    mStopBits = stopBits;
-
-    mFileDesc = -1;
-#endif
 
     mBaudRate = baudRate;
     mConnected = false;
@@ -104,7 +67,6 @@ int SerialPort::connect()
 {
     if(mConnected) return 0; // Already connected..
 
-#ifdef WIN32
     mHandle = CreateFileA(mPort.c_str(),
                         GENERIC_READ | GENERIC_WRITE,
                         0,    /* comm devices must be opened w/exclusive-access */
@@ -196,137 +158,6 @@ int SerialPort::connect()
     }
     while(read != 0);
 
-#else /* Linux */
-
-    int err;
-    //mFileDesc = open (mPort.c_str(), O_RDWR | O_NOCTTY);
-    mFileDesc = open (mPort.c_str(), O_RDWR | O_NONBLOCK | O_NOCTTY);
-
-    //mHandle = fdopen (mFileDesc, "a+");
-    //if(!mHandle)
-        //return 1;
-
-    // Don't block on device configuration.
-    int flags = fcntl(mFileDesc, F_GETFL, 0);
-    err = fcntl(mFileDesc, F_SETFL, flags | O_NDELAY);
-    if (err == -1)
-        return 2;
-
-    // Flush any garbage remaining on the port from previous operations.
-    err = tcflush(mFileDesc, TCIOFLUSH);
-    if (err == -1)
-        return 3;
-
-    struct termios tset;
-
-    // Setup the terminal for ordinary I/O
-    // e.g. as an ordinary modem or serial port printer.
-    //
-    // Default config: hangup on close.
-    // if the HUPCL bit set, closing the port will hang up
-    // the modem. (i.e. will lower the modem control lines)
-    //
-    // Default config: use hardware flow control
-    // if CRTSCTS is set, use h/w flow control (IXON/OFF should not be set).
-    // The best documentation for these calls can be found in
-    // the Linux man pages for termios(3) and stty(1).
-    //
-    // Default config:
-    // 8 bits, no parity
-    tset.c_cflag = CREAD|CS8|CRTSCTS|HUPCL;
-
-    switch (mStopBits)
-    {
-        case 2:
-            tset.c_cflag |= CSTOPB;
-            break;
-        default:
-            ; // one stop bit is default
-    }
-
-    switch (mBaudRate)
-    {
-        case 230400:
-            tset.c_cflag |= B230400;
-            break;
-        case 115200:
-            tset.c_cflag |= B115200;
-            break;
-        case 57600:
-            tset.c_cflag |= B57600;
-            break;
-        case 38400:
-            tset.c_cflag |= B38400;
-            break;
-        case 19200:
-            tset.c_cflag |= B19200;
-            break;
-        case 9600:
-            tset.c_cflag |= B9600;
-            break;
-        case 4800:
-            tset.c_cflag |= B4800;
-            break;
-        case 2400:
-            tset.c_cflag |= B2400;
-            break;
-        case 1800:
-            tset.c_cflag |= B1800;
-            break;
-        case 1200:
-            tset.c_cflag |= B1200;
-            break;
-        case 600:
-            tset.c_cflag |= B600;
-            break;
-        case 300:
-            tset.c_cflag |= B300;
-            break;
-        default:
-            return 4;
-    }
-
-    tset.c_cflag &= ~CRTSCTS;
-
-    // Default config: ignore break, do not ignore parity
-    tset.c_iflag = IGNBRK;
-
-    // Default: no delay on carriage return, backspace, tab, etc.
-    tset.c_oflag &= ~ (NLDLY|CRDLY|TABDLY|BSDLY|VTDLY|FFDLY);
-    tset.c_oflag |= NL0|CR0|TAB0|BS0|VT0|FF0;
-
-    // disable canonical processing
-    tset.c_lflag &= ~ICANON;
-
-    // disable echoing of input
-    tset.c_lflag &= ~ECHO;
-
-    tset.c_cc[VEOF]   = _POSIX_VDISABLE;
-    tset.c_cc[VEOL]   = _POSIX_VDISABLE;
-    tset.c_cc[VERASE] = _POSIX_VDISABLE;
-    tset.c_cc[VINTR]  = _POSIX_VDISABLE;
-    tset.c_cc[VKILL]  = _POSIX_VDISABLE;
-    tset.c_cc[VQUIT]  = _POSIX_VDISABLE;
-    tset.c_cc[VSUSP]  = _POSIX_VDISABLE;
-    tset.c_cc[VSTART] = _POSIX_VDISABLE;
-    tset.c_cc[VSTOP]  = _POSIX_VDISABLE;
-    tset.c_cc[VMIN] = 0;
-    tset.c_cc[VTIME] = 1;
-
-    err = tcsetattr(mFileDesc, TCSANOW, &tset);
-    if (err == -1)
-        return 5;
-
-    // allow commmunications to block
-    flags = fcntl(mFileDesc, F_GETFL, 0);
-    err = fcntl(mFileDesc, F_SETFL, flags & ~O_NDELAY);
-    if (err == -1)
-        return 6;
-
-    // flush any unwritten, unread data
-    tcflush(mFileDesc, TCIOFLUSH);
-#endif /* End of Linux part */
-
     // Connected!
     mConnected = true;
     return 0;
@@ -337,20 +168,10 @@ int SerialPort::disconnect()
     if(!mConnected)       // if already closed, return
         return 0;
 
-#ifdef WIN32
     if(!CloseHandle(mHandle)) // non-zero on success
         return 1;
     mHandle = 0x0;
-#else
-    if (mFileDesc <= 0) return 1;
-    //if (mHandle == 0x0) return 2;
 
-    tcflush(mFileDesc, TCIOFLUSH);
-    //fclose(mHandle);
-//  mHandle = 0x0;
-    close(mFileDesc);
-    mFileDesc = -1;
-#endif
 
     mConnected = false;
     return 0;
@@ -362,15 +183,11 @@ int SerialPort::sendBuffer(const char *buffer, const unsigned length)
 
     if((length==0) || (buffer==NULL))
         return 2;
-#ifdef WIN32
+
     unsigned long bogus;
     if(!WriteFile(mHandle, buffer, length, &bogus, NULL))
         return 3;
-#else
-    //if(fwrite(buffer, sizeof(char), length, mHandle) < length)
-    if(write(mFileDesc, buffer, length) < (int)length)
-        return 3;
-#endif
+
 
     return 0;
 }
@@ -381,18 +198,12 @@ int SerialPort::sendString(const std::string& string)
 
     if(string.length() == 0)
     return 2;
-#ifdef WIN32
+
     unsigned long bogus;
     FlushFileBuffers(mHandle);
     if(!WriteFile(mHandle, string.c_str(), string.length(), &bogus, NULL))
         return 3;
-#else
-    unsigned int length = string.length();
-    tcflush(mFileDesc, TCIOFLUSH);
-    //if(fwrite(string.c_str(), sizeof(char), length, mHandle) < length)
-    if(write(mFileDesc, string.c_str(), length) < (int)length)
-        return 3;
-#endif
+
     return 0;
 }
 
@@ -404,12 +215,8 @@ int SerialPort::receiveBuffer(char *buffer, const unsigned length)
 
     while(totalRead < length && counter < 50)
     {
-#ifdef WIN32
         if(!ReadFile(mHandle, buffer + totalRead, length - totalRead, &bytesRead, NULL) || !bytesRead)
-#else
-    //  if(!(bytesRead = fread(buffer + totalRead, sizeof(char), length - totalRead, mHandle)))
-        if(!(bytesRead = read(mFileDesc, buffer + totalRead, length - totalRead)))
-#endif
+
         counter++;
         totalRead += bytesRead;
     }
@@ -449,59 +256,9 @@ int SerialPort::receiveString(std::string& string)
 			return 1;
 	}
 	return 0;
-/*    if(!mConnected) return 1;
-    unsigned long bytesRead = 0, counter = 0;
-    char *buffer = mBuffer;
-
-    while(!bytesRead && counter < 100)
-    {
-#ifdef WIN32
-        ReadFile(mHandle, buffer, 1, &bytesRead, NULL);
-#else
-        //bytesRead = fread(buffer, sizeof(char), 1, mHandle);
-        bytesRead = read(mFileDesc, buffer, 1);
-#endif
-        counter++;
-    }
-    //StatusLine(std::string::Format("Counter is %d, read %d bytes.", counter, bytesRead));
-    if(!bytesRead)
-        return 2;
-    buffer++;
-    counter = 0;
-    while(*(buffer-1) != '\n' && counter < 1000 && buffer - mBuffer < SERIAL_BUFFERLEN - 1)
-    {
-#ifdef WIN32
-        ReadFile(mHandle, buffer, 1, &bytesRead, NULL);
-#else
-        //bytesRead = fread(buffer, sizeof(char), 1, mHandle);
-        bytesRead = read(mFileDesc, buffer, 1);
-#endif
-        if(!bytesRead)
-            counter++;
-        else
-            buffer++;
-    }
-    //StatusLine(std::string::Format("Counter is %d, read %d bytes.", counter, (unsigned)(buffer - (char*)mBuffer)));
-    if(*(buffer-1) != '\n')
-    {
-        std::cerr << "SerialPort - ReceiveString - Couldn't receive string (no end of line).";
-        return 3;
-    }
-    buffer[0] = '\0';
-
-    string = mBuffer;
-    return 0;*/
 }
 
 void SerialPort::sleep(unsigned long ms)
 {
-#ifdef WIN32
     Sleep(ms);
-#else
-    unsigned long s = ms / 1000U;
-    unsigned long ns = ms*1000000U - s*1000000000U;
-    struct timespec sleepTime = {s, ns};
-    struct timespec remaining;
-    nanosleep(&sleepTime, &remaining);
-#endif
 }
