@@ -4,10 +4,6 @@
 #include <QWidget>
 #include <QLineEdit>
 
-#define MOTOR   0
-#define SENSOR  1
-#define MCU     2
-
 #define NOTCONNECTED    0
 #define CONNECTED       1
 #define CONNECTING      2
@@ -24,17 +20,19 @@ class ConnectionScreen : public QWidget
 
 public:
     explicit ConnectionScreen(QWidget *parent = nullptr);
-    void setCallbacks(ConnectionCallbackFP extMotor, ConnectionCallbackFP extSensor, ConnectionCallbackFP extMCU) ;
+    void setCallbacks(ConnectionCallbackFP extMotor,
+                      ConnectionCallbackFP extSensor,
+                      ConnectionCallbackFP extECU) ;
     void changeButton(int device, int state) ;
     ~ConnectionScreen();
 private slots:
     void motor_cb() ;
-    void MCU_cb() ;
+    void ECU_cb() ;
     void sensor_cb() ;
 private:
     ConnectionCallbackFP extMotor_cb ;
     ConnectionCallbackFP extSensor_cb ;
-    ConnectionCallbackFP extMCU_cb ;
+    ConnectionCallbackFP extECU_cb ;
 
     Ui::ConnectionScreen *ui;
 };

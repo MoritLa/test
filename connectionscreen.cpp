@@ -1,6 +1,8 @@
 #include "connectionscreen.h"
 #include "ui_connectionscreen.h"
 
+#include "messages_header.h"
+
 #include <iostream>
 
 ConnectionScreen::ConnectionScreen(QWidget *parent) :
@@ -24,17 +26,17 @@ void ConnectionScreen::sensor_cb(void)
 {
     extSensor_cb(this->ui->SensorPort->text()) ;
 }
-void ConnectionScreen::MCU_cb(void)
+void ConnectionScreen::ECU_cb(void)
 {
-    extMCU_cb(this->ui->MCUPort->text()) ;
+    extECU_cb(this->ui->ECUPort->text()) ;
 }
 
 // initialise callback Functions
-void ConnectionScreen::setCallbacks(ConnectionCallbackFP extMotor, ConnectionCallbackFP extSensor, ConnectionCallbackFP extMCU)
+void ConnectionScreen::setCallbacks(ConnectionCallbackFP extMotor, ConnectionCallbackFP extSensor, ConnectionCallbackFP extECU)
 {
     extMotor_cb = extMotor ;
     extSensor_cb = extSensor ;
-    extMCU_cb = extMCU ;
+    extECU_cb = extECU ;
 }
 
 void ConnectionScreen::changeButton(int device, int state)
@@ -55,12 +57,12 @@ void ConnectionScreen::changeButton(int device, int state)
         case CONNECTING:    ui->ConnectSensor->setText("...") ;          break ;
         case NOTCONNECTED:  ui->ConnectSensor->setText("Connect") ;      break ;
         }break ;
-    case MCU    :
+    case ECU    :
         switch (state)
         {
-        case CONNECTED:     ui->ConnectMcu->setText("Disconnect") ;   break ;
-        case CONNECTING:    ui->ConnectMcu->setText("...") ;          break ;
-        case NOTCONNECTED:  ui->ConnectMcu->setText("Connect") ;      break ;
+        case CONNECTED:     ui->ConnectECU->setText("Disconnect") ;   break ;
+        case CONNECTING:    ui->ConnectECU->setText("...") ;          break ;
+        case NOTCONNECTED:  ui->ConnectECU->setText("Connect") ;      break ;
         }break ;
     default     : break ;
     }

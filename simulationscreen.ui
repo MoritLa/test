@@ -1,17 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>infoScreen</class>
- <widget class="QWidget" name="infoScreen">
+ <class>simulationScreen</class>
+ <widget class="QWidget" name="simulationScreen">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>359</width>
-    <height>253</height>
+    <width>354</width>
+    <height>252</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>infoScreen</string>
+   <string>Simulation</string>
   </property>
   <widget class="QLabel" name="speed_fr">
    <property name="geometry">
@@ -23,7 +32,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0 m/s</string>
    </property>
   </widget>
   <widget class="Line" name="line">
@@ -12191,7 +12200,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0 m/s</string>
    </property>
   </widget>
   <widget class="QLabel" name="speed_rl">
@@ -12204,7 +12213,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0 m/s</string>
    </property>
   </widget>
   <widget class="QLabel" name="speed_fl">
@@ -12217,7 +12226,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0 m/s</string>
    </property>
   </widget>
   <widget class="QLabel" name="torque">
@@ -12230,7 +12239,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0Nm</string>
    </property>
   </widget>
   <widget class="QLabel" name="speed_motor">
@@ -12243,7 +12252,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0rpm</string>
    </property>
   </widget>
   <widget class="QLabel" name="batterie_temp">
@@ -12256,7 +12265,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0°C</string>
    </property>
   </widget>
   <widget class="QLabel" name="batterie_charge">
@@ -12264,12 +12273,12 @@
     <rect>
      <x>30</x>
      <y>150</y>
-     <width>47</width>
-     <height>13</height>
+     <width>51</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0Wh</string>
    </property>
   </widget>
   <widget class="QLabel" name="angle_fr">
@@ -12282,7 +12291,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0°</string>
    </property>
   </widget>
   <widget class="QLabel" name="angle_fl">
@@ -12295,7 +12304,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0°</string>
    </property>
   </widget>
   <widget class="QLabel" name="breakPw_rr">
@@ -12308,7 +12317,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0N</string>
    </property>
   </widget>
   <widget class="QLabel" name="breakPw_rl">
@@ -12321,7 +12330,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0N</string>
    </property>
   </widget>
   <widget class="QLabel" name="breakPw_fl">
@@ -12334,7 +12343,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0N</string>
    </property>
   </widget>
   <widget class="QLabel" name="breakPw_fr">
@@ -12347,7 +12356,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>0N</string>
    </property>
   </widget>
   <widget class="QLabel" name="wheel_fl">
@@ -12360,7 +12369,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>front left</string>
    </property>
   </widget>
   <widget class="QLabel" name="wheel_fr">
@@ -12368,12 +12377,12 @@
     <rect>
      <x>290</x>
      <y>10</y>
-     <width>47</width>
-     <height>13</height>
+     <width>51</width>
+     <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>front right</string>
    </property>
   </widget>
   <widget class="QLabel" name="wheel_rl">
@@ -12386,7 +12395,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>rear left</string>
    </property>
   </widget>
   <widget class="QLabel" name="wheel_rr">
@@ -12399,7 +12408,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>rear right</string>
    </property>
   </widget>
   <widget class="QLabel" name="VSI">
@@ -12412,7 +12421,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>VSI</string>
    </property>
   </widget>
   <widget class="QLabel" name="batterie">
@@ -12425,7 +12434,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>TextLabel</string>
+    <string>battery</string>
    </property>
   </widget>
  </widget>
