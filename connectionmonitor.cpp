@@ -10,7 +10,7 @@ using namespace std ;
 //-------Public functions
 ConnectionMonitor::ConnectionMonitor()
 {
-
+    connect(&timer, SIGNAL(timeout()),this, SLOT(ReadBuffer())) ;
 }
 
 void ConnectionMonitor::init(ConnectionScreen *extDisplay,
@@ -20,13 +20,14 @@ void ConnectionMonitor::init(ConnectionScreen *extDisplay,
     Display = extDisplay ;
     extSpeed_cb = speed_cb ;
     extTorque_cb = torque_cb ;
+
+    timer.start(10) ;
 }
 
 void ConnectionMonitor::ConnectMotor(QString port)
 {
     uint8_t out[2] = {0x80,0x00} ;
     char in[4] ;
-
     Display->changeButton(MOTOR, CONNECTING) ;
     if(MotorConnected == NOTCONNECTED)
     {
@@ -42,6 +43,7 @@ void ConnectionMonitor::ConnectMotor(QString port)
         {
             Motor.sendBuffer((char*) out, 2) ;
             Motor.receiveBuffer(in,4) ;
+            cout<<"test 3"<< in[3]<<endl ;
             if(in[3] == MOTOR_TYPE)
             {
                 Display->changeButton(MOTOR, CONNECTED) ;
@@ -168,13 +170,14 @@ void ConnectionMonitor::ConnectECU(QString port)
 
 void ConnectionMonitor::StartReceiving(void)
 {
-    timerId = this->startTimer(1) ;
+    if(~timer.isActive())
+        timer.start() ;
     connect(this, SIGNAL(timeout()),this, SLOT(ReadBuffer())) ;
 }
 
 void ConnectionMonitor::StopReceiving(void)
 {
-    this->killTimer(timerId) ;
+    timer.stop() ;
 }
 
 void ConnectionMonitor::UpdateMotor(double TrueSpeed, double TrueTorque)
@@ -187,7 +190,7 @@ void ConnectionMonitor::UpdateMotor(double TrueSpeed, double TrueTorque)
     output[2] = outdata; output[3] = outdata>>8;
     Motor.sendBuffer(output,2+headers_S[MOTOR][TRUE_MOTOR_SPEED].length) ;
 
-    outdata = ((TrueSpeed*MAX_VAL)/M_MAX_MOTOR);
+    outdata = ((TrueTorque*MAX_VAL)/M_MAX_MOTOR);
     output[0] = headers_S[MOTOR][TRUE_MOTOR_TORQUE].id ; output[1] = headers_S[MOTOR][TRUE_MOTOR_TORQUE].length ;
     output[2] = outdata>>8; output[3] = outdata;
     Motor.sendBuffer(output,2+headers_S[MOTOR][TRUE_MOTOR_TORQUE].length) ;
@@ -255,13 +258,14 @@ void ConnectionMonitor::ReadBuffer(void)
     int16_t data16 ;
     char length ;
     char data[64];
-    while(~Motor.receiveBuffer(id, 2))
+    if(~Motor.receiveBuffer(id, 2))
     {
         Motor.receiveBuffer(&length,1) ;
         Motor.receiveBuffer(data,length) ;
-        if (id[1] != ID_HIGH)
-            continue ;
-        switch (id[0])
+
+        if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
+            return ;
+        switch (static_cast<int>(id[0])&0xFF)
         {
         case SPEED_SETPOINT_ID :
             if(length = headers_R[MOTOR][SPEED_SETPOINT].length)

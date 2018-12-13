@@ -70,6 +70,8 @@ void accelerator_cb(int AcceleratorPedal)
 
 void cruise_cb(int MaxSpeed)
 {
+    printf("%d\n",MaxSpeed) ;
+    //Simulation->setSpeedSetpoint(MaxSpeed);
     //send to sensor unit??
 }
 
@@ -95,6 +97,7 @@ void steering_cb(int SteeringAngle)
 
 void speed_cb(int16_t data)
 {
+
     Simulation->setSpeedSetpoint(data) ;
 }
 

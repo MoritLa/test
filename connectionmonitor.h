@@ -7,20 +7,24 @@
 #include <stdint.h>
 
 #include <QString>
+#include <QTimer>
 
 typedef void (*ReceiveCallbackFP)(int16_t data) ;
 
 class ConnectionMonitor: public QObject
 {
+    Q_OBJECT
+
 private:
-    int timerId ;
+     QTimer timer ;
     ConnectionScreen * Display ;
     SerialPort Motor, Sensor, Ecu ;
     bool MotorConnected = NOTCONNECTED, SensorConnected =NOTCONNECTED, EcuConnected = NOTCONNECTED ;
-private slots:
-    void ReadBuffer(void) ;
+
     ReceiveCallbackFP extSpeed_cb ;
     ReceiveCallbackFP extTorque_cb ;
+private slots:
+    void ReadBuffer(void) ;
 public:
     ConnectionMonitor();
 
@@ -41,7 +45,6 @@ public:
 
     void send_Pedals(double breakPedal, double accelerationPedal) ;
     void send_steering(double steeringAngle) ;
-
 };
 
 #endif // CONNECTIONMONITOR_H

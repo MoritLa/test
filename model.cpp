@@ -2,6 +2,7 @@
 #include <QObject>
 
 #include "constants.h"
+#include <iostream>
 
 enum{LONGITUDINAL, LATERAL, UPWARDS} ;
 
@@ -34,6 +35,7 @@ void Model::init(void)
 
     StateOfCharge = INITIAL_CHARGE ;
 
+    //SpeedSetpoint = 10 ;
 
     OutputWindow->UpdateScreen(WheelSpeed,
                                WheelTorque,
@@ -48,7 +50,7 @@ void Model::pause(void)
     simulate = !simulate;
 
     if (simulate)
-        timer.start(1) ;
+        timer.start(2) ;
     else
         timer.stop() ;
 }
@@ -64,6 +66,7 @@ void Model::UpdateStep()
      * send to epucks
      * update infoscreen
      */
+
     if(simulate)
     {
         NewTorque() ;
@@ -86,7 +89,7 @@ void Model::setAccelerationPedal(int newAccelerationPedal)
 {
     acceleratorPedal = (double)newAccelerationPedal/MAX_ACCELERATION_PEDAL ;
     OutputInterface->send_Pedals(breakPedal, acceleratorPedal) ;
-//    TorqueSetpoint = acceleratorPedal*150 ;
+    TorqueSetpoint = acceleratorPedal*150 ;
 }
 
 void Model::setSteeringAngle(int newSteeringAngle)
@@ -97,7 +100,9 @@ void Model::setSteeringAngle(int newSteeringAngle)
 
 void Model::setSpeedSetpoint(int16_t speedSetpoint)
 {
-    SpeedSetpoint = ((double)speedSetpoint/MAX_VAL)*V_MAX ;
+    SpeedSetpoint = ((double)speedSetpoint/MAX_VAL)*2*V_MAX_MOTOR ; //2 because int goes only until 0x7FFF
+    std::cout<<SpeedSetpoint<<std::endl ;
+    printf("%lf\n",SpeedSetpoint) ;
 }
 
 void Model::setTorqueSetpoint(int16_t torqueSetpoint)
@@ -133,7 +138,7 @@ void Model::NewAcceleration(void) //VSI
     else
         acceleration[LONGITUDINAL] = (Traction-breakPedal*BREAK_FACTOR)/CAR_MASS ;
     acceleration[LONGITUDINAL] -= FRICTION; //breaking because of friction
-    printf("%lf %lf %lf\n", Traction, breakPedal*BREAK_FACTOR,acceleration[LONGITUDINAL]) ;
+
     netSpeed += acceleration[LONGITUDINAL]*DELTA_T ;
     TrueSpeed = netSpeed/(PI*WHEEL_DIAMETER)*REDUCTION_FACTOR ;
 
