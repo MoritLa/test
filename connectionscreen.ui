@@ -35,6 +35,9 @@
      <height>20</height>
     </rect>
    </property>
+   <property name="text">
+    <string>COM9</string>
+   </property>
   </widget>
   <widget class="QLabel" name="Motor">
    <property name="geometry">
@@ -71,6 +74,9 @@
      <height>20</height>
     </rect>
    </property>
+   <property name="text">
+    <string>COM31</string>
+   </property>
   </widget>
   <widget class="QPushButton" name="ConnectSensor">
    <property name="geometry">
@@ -106,6 +112,9 @@
      <width>113</width>
      <height>20</height>
     </rect>
+   </property>
+   <property name="text">
+    <string>COM24</string>
    </property>
   </widget>
   <widget class="QLabel" name="ECU">

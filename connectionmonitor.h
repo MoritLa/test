@@ -8,29 +8,39 @@
 
 #include <QString>
 #include <QTimer>
+#include <QTime>
 
-typedef void (*ReceiveCallbackFP)(int16_t data) ;
+typedef void (*ReceiveCallback16FP)(uint16_t data) ;
+typedef void (*ReceiveCallback8FP)(uint8_t data) ;
 
 class ConnectionMonitor: public QObject
 {
     Q_OBJECT
 
 private:
-     QTimer timer ;
+    QTimer timer ;
+    QTime timing ;
     ConnectionScreen * Display ;
     SerialPort Motor, Sensor, Ecu ;
+    bool treatData[3][3] ;
+    bool doReadOut[3] ;
     bool MotorConnected = NOTCONNECTED, SensorConnected =NOTCONNECTED, EcuConnected = NOTCONNECTED ;
 
-    ReceiveCallbackFP extSpeed_cb ;
-    ReceiveCallbackFP extTorque_cb ;
+    ReceiveCallback16FP extSpeed_cb ;
+    ReceiveCallback16FP extTorque_cb ;
+    ReceiveCallback8FP  extState_cb ;
+    ReceiveCallback16FP extAngle_cb ;
+
 private slots:
     void ReadBuffer(void) ;
 public:
     ConnectionMonitor();
 
     void init(ConnectionScreen *extDisplay,
-              ReceiveCallbackFP speed_cb,
-              ReceiveCallbackFP torque_cb) ;
+              ReceiveCallback16FP speed_cb,
+              ReceiveCallback16FP torque_cb,
+              ReceiveCallback8FP state_cb,
+              ReceiveCallback16FP angle_cb) ;
 
     void ConnectMotor(QString port) ;
     void ConnectSensor(QString port) ;

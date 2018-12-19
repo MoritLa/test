@@ -7,27 +7,46 @@
 
 using namespace std ;
 
+#define HEADER      "\\\\.\\"
+
 //-------Public functions
 ConnectionMonitor::ConnectionMonitor()
 {
     connect(&timer, SIGNAL(timeout()),this, SLOT(ReadBuffer())) ;
+    StopReceiving() ;
 }
 
 void ConnectionMonitor::init(ConnectionScreen *extDisplay,
-                             ReceiveCallbackFP speed_cb,
-                             ReceiveCallbackFP torque_cb)
+                             ReceiveCallback16FP speed_cb,
+                             ReceiveCallback16FP torque_cb,
+                             ReceiveCallback8FP  state_cb,
+                             ReceiveCallback16FP angle_cb)
 {
     Display = extDisplay ;
     extSpeed_cb = speed_cb ;
     extTorque_cb = torque_cb ;
-
-    timer.start(10) ;
+    extState_cb = state_cb ;
+    extAngle_cb = angle_cb ;
 }
 
 void ConnectionMonitor::ConnectMotor(QString port)
 {
-    uint8_t out[2] = {0x80,0x00} ;
+    uint8_t out[2] = {TYPE_ID,TYPE_LENGTH} ;
     char in[4] ;
+
+    QString port_head  = HEADER ;
+
+    if(port == "0")
+    {
+        Display->changeButton(MOTOR,NOTCONNECTED) ;
+        MotorConnected = NOTCONNECTED ;
+        Motor.disconnect();
+        return ;
+    }
+
+    if(!port.contains(HEADER))
+        port = port_head + port ;
+
     Display->changeButton(MOTOR, CONNECTING) ;
     if(MotorConnected == NOTCONNECTED)
     {
@@ -43,7 +62,7 @@ void ConnectionMonitor::ConnectMotor(QString port)
         {
             Motor.sendBuffer((char*) out, 2) ;
             Motor.receiveBuffer(in,4) ;
-            cout<<"test 3"<< in[3]<<endl ;
+
             if(in[3] == MOTOR_TYPE)
             {
                 Display->changeButton(MOTOR, CONNECTED) ;
@@ -74,8 +93,21 @@ void ConnectionMonitor::ConnectMotor(QString port)
 
 void ConnectionMonitor::ConnectSensor(QString port)
 {
-    uint8_t out[2] = {0x80,0x00} ;
+    uint8_t out[2] = {TYPE_ID,TYPE_LENGTH} ;
     char in[4] ;
+
+    QString port_head  = HEADER ;
+
+    if(port == "0")
+    {
+        Display->changeButton(MOTOR,NOTCONNECTED) ;
+        MotorConnected = NOTCONNECTED ;
+        Motor.disconnect();
+        return ;
+    }
+
+    if(!port.contains(HEADER))
+        port = port_head + port ;
 
     Display->changeButton(SENSOR, CONNECTING) ;
     if (SensorConnected == NOTCONNECTED)
@@ -121,9 +153,22 @@ void ConnectionMonitor::ConnectSensor(QString port)
 
 void ConnectionMonitor::ConnectECU(QString port)
 {
-    uint8_t out[2] = {0x80,0x00} ;
+    uint8_t out[2] = {TYPE_ID,TYPE_LENGTH} ;
     uint8_t in[4] ;
     int showIn[4] ;
+
+    QString port_head  = HEADER ;
+
+    if(port == "0")
+    {
+        Display->changeButton(MOTOR,NOTCONNECTED) ;
+        MotorConnected = NOTCONNECTED ;
+        Motor.disconnect();
+        return ;
+    }
+
+    if(!port.contains(HEADER))
+        port = port_head + port ;
 
     Display->changeButton(ECU, CONNECTING) ;
     if(EcuConnected == NOTCONNECTED)
@@ -170,30 +215,61 @@ void ConnectionMonitor::ConnectECU(QString port)
 
 void ConnectionMonitor::StartReceiving(void)
 {
-    if(~timer.isActive())
-        timer.start() ;
-    connect(this, SIGNAL(timeout()),this, SLOT(ReadBuffer())) ;
+    char output[3] ;
+    if(!timer.isActive())
+        timer.start(100) ;
+
+    output[0] = static_cast<char>(headers_S[MOTOR][MOTOR_CONFIG].id); output[1] = headers_S[MOTOR][MOTOR_CONFIG].length ;
+    output[2] = START_OUTPUT;
+    Motor.sendBuffer(output, HEADER_LENGTH+headers_S[MOTOR][MOTOR_CONFIG].length) ;
+
+    output[0] = static_cast<char>(headers_S[SENSOR][SENSOR_CONFIG].id); output[1] = headers_S[SENSOR][MOTOR_CONFIG].length ;
+    output[2] = START_OUTPUT;
+    Sensor.sendBuffer(output, HEADER_LENGTH+headers_S[SENSOR][MOTOR_CONFIG].length) ;
+
+    output[0] = static_cast<char>(headers_S[ECU][ECU_CONFIG].id); output[1] = headers_S[ECU][ECU_CONFIG].length ;
+    output[2] = START_OUTPUT;
+    Ecu.sendBuffer(output, HEADER_LENGTH+headers_S[ECU][ECU_CONFIG].length) ;
+    timing.start();
 }
 
 void ConnectionMonitor::StopReceiving(void)
 {
+    char output[3] ;
+
+
+    output[0] = static_cast<char>(headers_S[MOTOR][MOTOR_CONFIG].id); output[1] = headers_S[MOTOR][MOTOR_CONFIG].length ;
+    output[2] = !START_OUTPUT;
+    Motor.sendBuffer(output, HEADER_LENGTH+headers_S[MOTOR][MOTOR_CONFIG].length) ;
+
+    output[0] = static_cast<char>(headers_S[SENSOR][SENSOR_CONFIG].id); output[1] = headers_S[SENSOR][SENSOR_CONFIG].length ;
+    output[2] = !START_OUTPUT;
+    Sensor.sendBuffer(output, HEADER_LENGTH+headers_S[SENSOR][SENSOR_CONFIG].length) ;
+
+    output[0] = static_cast<char>(headers_S[ECU][ECU_CONFIG].id); output[1] = headers_S[ECU][ECU_CONFIG].length ;
+    output[2] = !START_OUTPUT;
+    Ecu.sendBuffer(output, HEADER_LENGTH+headers_S[ECU][ECU_CONFIG].length) ;
+
     timer.stop() ;
 }
 
 void ConnectionMonitor::UpdateMotor(double TrueSpeed, double TrueTorque)
 {
+
     char output[MAX_UART_MESSAGE_LENGTH];
     uint16_t outdata ;
     //conversion not from float to uint8_t and to output format
     outdata = ((TrueSpeed*MAX_VAL)/V_MAX_MOTOR);
     output[0] = headers_S[MOTOR][TRUE_MOTOR_SPEED].id ; output[1] = headers_S[MOTOR][TRUE_MOTOR_SPEED].length ;
     output[2] = outdata; output[3] = outdata>>8;
-    Motor.sendBuffer(output,2+headers_S[MOTOR][TRUE_MOTOR_SPEED].length) ;
+
+    Motor.sendBuffer(output,HEADER_LENGTH+headers_S[MOTOR][TRUE_MOTOR_SPEED].length) ;
 
     outdata = ((TrueTorque*MAX_VAL)/M_MAX_MOTOR);
     output[0] = headers_S[MOTOR][TRUE_MOTOR_TORQUE].id ; output[1] = headers_S[MOTOR][TRUE_MOTOR_TORQUE].length ;
     output[2] = outdata>>8; output[3] = outdata;
-    Motor.sendBuffer(output,2+headers_S[MOTOR][TRUE_MOTOR_TORQUE].length) ;
+
+    Motor.sendBuffer(output,HEADER_LENGTH+headers_S[MOTOR][TRUE_MOTOR_TORQUE].length) ;
 }
 
 void ConnectionMonitor::UpdateECU(void)
@@ -208,10 +284,10 @@ void ConnectionMonitor::UpdateSensor(double WheelSpeed[4], double Acceleration[3
 
     for(int i = 0; i<4;i++)
     {
-        outdata = WheelSpeed[i]*MAX_VAL/V_MAX_WHEEL ;
+        outdata = WheelSpeed[i]*MAX_VAL_2/V_MAX_WHEEL+MAX_VAL_2 ;
         output[2+2*i] = outdata; output[3+2*i] = outdata>>8 ;
     }
-    output[0] = headers_S[SENSOR][SENSOR].id ; output[1] = headers_S[SENSOR][SENSOR].length ;
+    output[0] = headers_S[SENSOR][TRUE_SPEED].id ; output[1] = headers_S[SENSOR][TRUE_SPEED].length ;
     Sensor.sendBuffer(output,2+headers_S[SENSOR][TRUE_SPEED].length) ;
 
     for(int i = 0; i<3;i++)
@@ -255,11 +331,24 @@ void ConnectionMonitor::send_steering(double steeringAngle)
 void ConnectionMonitor::ReadBuffer(void)
 {
     char id[2] ;
-    int16_t data16 ;
+    uint16_t data16 ;
+    uint8_t data8 ;
     char length ;
     char data[64];
-    if(~Motor.receiveBuffer(id, 2))
+    int i =0;
+    int time_elapsed ;
+    time_elapsed = timing.elapsed() ;
+
+    while(!Motor.receiveBuffer(id, 2))
     {
+        i++;
+        if (i>10)
+        {
+
+            break ;
+        }
+        std::cout<<hex<<"Motor: "<<(static_cast<int>(id[0])&0xFF)<<endl;
+
         Motor.receiveBuffer(&length,1) ;
         Motor.receiveBuffer(data,length) ;
 
@@ -268,20 +357,79 @@ void ConnectionMonitor::ReadBuffer(void)
         switch (static_cast<int>(id[0])&0xFF)
         {
         case SPEED_SETPOINT_ID :
-            if(length = headers_R[MOTOR][SPEED_SETPOINT].length)
+
+            if(length == headers_R[MOTOR][SPEED_SETPOINT].length)
             {
                 data16 = data[0]+(data[1]<<8) ;
                 extSpeed_cb(data16);
             }
             break;
         case TORQUE_SETPOINT_ID:
-            if(length = headers_R[MOTOR][TORQUE_SETPOINT].length)
+            if(length == headers_R[MOTOR][TORQUE_SETPOINT].length)
             {
                 data16 = data[0]+(data[1]<<8) ;
                 extTorque_cb(data16);
+            } break;
+        case SYSTEM_STATE_ID:
+            if(length == headers_R[ECU][SYSTEM_STATE].length)
+            {
+                data8 = data[0] ;
+                extState_cb(data8) ;
+            } break;
+        case STEERING_ANGLE_ID:
+            if(length == headers_S[SENSOR][STEERING_ANGLE].length)
+            {
+                data16 = data[0]+(data[1]<<8) ;
+                extAngle_cb(data16) ;
             }
             break;
         default: break;
         }
     }
+
+    std::cout<<"Timer: "<<timing.elapsed() - time_elapsed<<endl<<"i: "<<i<<endl ;
+    time_elapsed =timing.elapsed() ;
+    i = 0 ;
+    if(!Sensor.receiveBuffer(id, 2))
+    {
+        std::cout<<hex<<"Sensor: "<<static_cast<int>(id[0])<<endl;
+        Sensor.receiveBuffer(&length,1) ;
+        Sensor.receiveBuffer(data,length) ;
+
+        if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
+            return ;
+        switch (static_cast<int>(id[0])&0xFF)
+        {
+        case STEERING_ANGLE_ID:
+            if(length == headers_S[SENSOR][STEERING_ANGLE].length)
+            {
+                data16 = data[0]+(data[1]<<8) ;
+                extAngle_cb(data16) ;
+            }
+            break;
+        default: break;
+        }
+    }
+
+
+    if(!Ecu.receiveBuffer(id, 2))
+    {
+        std::cout<<hex<<"ECU: "<<static_cast<int>(id[0])<<endl;
+        Ecu.receiveBuffer(&length,1) ;
+        Ecu.receiveBuffer(data,length) ;
+
+        if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
+            return ;
+        switch (static_cast<int>(id[0])&0xFF)
+        {
+        case SYSTEM_STATE_ID:
+            if(length == headers_R[ECU][SYSTEM_STATE].length)
+            {
+                data8 = data[0] ;
+                extState_cb(data8) ;
+            } break;
+        default: break;
+        }
+    }
+
 }

@@ -1,5 +1,8 @@
 #include "cockpitscreen.h"
 #include "ui_cockpitscreen.h"
+#include "constants.h"
+
+#include <iostream>
 
 CockpitScreen::CockpitScreen(QWidget *parent) :
     QWidget(parent),
@@ -23,7 +26,8 @@ void CockpitScreen::setCallbacks(CockpitButtonCallbackFP extStartStop,
                                  CockpitButtonCallbackFP extDrive,
                                  CockpitButtonCallbackFP extTS,
                                  CockpitValueCallbackFP extUseEpuck,
-                                 CockpitValueCallbackFP extSteering)
+                                 CockpitValueCallbackFP extSteering,
+                                 CockpitButtonCallbackFP extQuit)
 {
     extStartStop_cb =extStartStop;
     extRestart_cb = extRestart;
@@ -36,6 +40,25 @@ void CockpitScreen::setCallbacks(CockpitButtonCallbackFP extStartStop,
     extTS_cb = extTS ;
     extUseEpuck_cb = extUseEpuck ;
     extSteering_cb = extSteering ;
+    extQuit_cb = extQuit ;
+}
+
+void CockpitScreen::setStartButton(bool simulate)
+{
+    QString running ;
+
+    if (simulate)
+        running.sprintf("Stop") ;
+    else
+        running.sprintf("Run") ;
+
+    ui->Run->setText(running) ;
+}
+
+void CockpitScreen::setSteering(int angle)
+{
+    if(!useSlider)
+        ui->SteeringWheel->setValue(angle*MAX_STEERING_WHEEL/MAX_VAL) ;
 }
 
 //private slots
@@ -77,9 +100,16 @@ void CockpitScreen::TS_cb(void)
 }
 void CockpitScreen::useEpuck(int use)
 {
+    useSlider = !use ;
     extUseEpuck_cb(use) ;
 }
 void CockpitScreen::steering_cb(int SteeringAngle)
 {
-    extSteering_cb(SteeringAngle) ;
+    if(useSlider)
+        extSteering_cb(SteeringAngle) ;
+}
+
+void CockpitScreen::quit_cb(void)
+{
+    extQuit_cb() ;
 }

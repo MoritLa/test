@@ -28,6 +28,9 @@
    <property name="value">
     <number>50</number>
    </property>
+   <property name="sliderPosition">
+    <number>50</number>
+   </property>
    <property name="orientation">
     <enum>Qt::Horizontal</enum>
    </property>
@@ -1581,7 +1584,7 @@
   <widget class="QPushButton" name="Run">
    <property name="geometry">
     <rect>
-     <x>100</x>
+     <x>50</x>
      <y>330</y>
      <width>75</width>
      <height>23</height>
@@ -1594,7 +1597,7 @@
   <widget class="QPushButton" name="Init">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>150</x>
      <y>330</y>
      <width>75</width>
      <height>23</height>
@@ -1602,6 +1605,19 @@
    </property>
    <property name="text">
     <string>Init</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>330</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Quit</string>
    </property>
   </widget>
  </widget>
@@ -1682,8 +1698,8 @@
      <y>251</y>
     </hint>
     <hint type="destinationlabel">
-     <x>275</x>
-     <y>232</y>
+     <x>270</x>
+     <y>240</y>
     </hint>
    </hints>
   </connection>
@@ -1730,8 +1746,8 @@
      <y>56</y>
     </hint>
     <hint type="destinationlabel">
-     <x>220</x>
-     <y>77</y>
+     <x>224</x>
+     <y>74</y>
     </hint>
    </hints>
   </connection>
@@ -1742,12 +1758,12 @@
    <slot>restart()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>227</x>
+     <x>187</x>
      <y>344</y>
     </hint>
     <hint type="destinationlabel">
-     <x>243</x>
-     <y>312</y>
+     <x>200</x>
+     <y>314</y>
     </hint>
    </hints>
   </connection>
@@ -1758,7 +1774,7 @@
    <slot>startStop()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>148</x>
+     <x>98</x>
      <y>342</y>
     </hint>
     <hint type="destinationlabel">
@@ -1778,8 +1794,24 @@
      <y>311</y>
     </hint>
     <hint type="destinationlabel">
-     <x>327</x>
-     <y>343</y>
+     <x>350</x>
+     <y>308</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>released()</signal>
+   <receiver>CockpitScreen</receiver>
+   <slot>quit_cb()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>272</x>
+     <y>342</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>335</x>
+     <y>346</y>
     </hint>
    </hints>
   </connection>
@@ -1797,5 +1829,6 @@
   <slot>startStop()</slot>
   <slot>driveMode_cb(int)</slot>
   <slot>breakBalance_cb(int)</slot>
+  <slot>quit_cb()</slot>
  </slots>
 </ui>

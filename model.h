@@ -4,6 +4,7 @@
 #include <QTimer>
 #include "connectionmonitor.h"
 #include "simulationscreen.h"
+#include "cockpitscreen.h"
 
 #include <stdint.h>
 
@@ -13,6 +14,7 @@ class Model: public QObject
 
     ConnectionMonitor *OutputInterface ;
     simulationScreen * OutputWindow ;
+    CockpitScreen * InputWindow ;
     QTimer timer ;
 
     bool simulate = 0 ;
@@ -39,7 +41,9 @@ private slots:
     void UpdateStep(void) ;
 
 public:
-    Model(ConnectionMonitor *outputEmitter, simulationScreen *outputScreen);
+    Model(ConnectionMonitor *outputEmitter,
+          simulationScreen *outputScreen,
+          CockpitScreen *inputScreen);
     void init(void) ;
     void pause(void) ;
 
@@ -47,8 +51,8 @@ public:
     void setAccelerationPedal(int newAccelerationPedal) ;
     void setSteeringAngle(int newSteeringAngle) ;
 
-    void setSpeedSetpoint(int16_t speedSetpoint);
-    void setTorqueSetpoint(int16_t torqueSetpoint) ;
+    void setSpeedSetpoint(uint16_t speedSetpoint);
+    void setTorqueSetpoint(uint16_t torqueSetpoint) ;
 };
 
 

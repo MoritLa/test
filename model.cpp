@@ -6,10 +6,13 @@
 
 enum{LONGITUDINAL, LATERAL, UPWARDS} ;
 
-Model::Model(ConnectionMonitor * outputEmitter, simulationScreen *outputScreen)
+Model::Model(ConnectionMonitor * outputEmitter,
+             simulationScreen *outputScreen,
+             CockpitScreen *inputScreen)
 {
     OutputInterface = outputEmitter ;
     OutputWindow = outputScreen ;
+    InputWindow = inputScreen ;
 
     connect(&timer, SIGNAL(timeout()),this, SLOT(UpdateStep())) ;
     init() ;
@@ -21,6 +24,7 @@ void Model::init(void)
     simulate = 0 ;
     if(timer.isActive())
         timer.stop() ;
+    OutputInterface->StopReceiving();
 
     //set initial values
     for(int i = 0; i<4;i++)
@@ -50,9 +54,16 @@ void Model::pause(void)
     simulate = !simulate;
 
     if (simulate)
-        timer.start(2) ;
+    {
+        timer.start(500) ;
+        OutputInterface->StartReceiving();
+    }
     else
+    {
+        OutputInterface->StopReceiving();
         timer.stop() ;
+    }
+    InputWindow->setStartButton(simulate) ;
 }
 
 // private slots
@@ -66,6 +77,7 @@ void Model::UpdateStep()
      * send to epucks
      * update infoscreen
      */
+
 
     if(simulate)
     {
@@ -89,25 +101,28 @@ void Model::setAccelerationPedal(int newAccelerationPedal)
 {
     acceleratorPedal = (double)newAccelerationPedal/MAX_ACCELERATION_PEDAL ;
     OutputInterface->send_Pedals(breakPedal, acceleratorPedal) ;
-    TorqueSetpoint = acceleratorPedal*150 ;
+ //   TorqueSetpoint = acceleratorPedal*150 ;
 }
 
 void Model::setSteeringAngle(int newSteeringAngle)
 {
-    steeringAngle =  ((double) newSteeringAngle-MAX_STEERING_WHEEL)/MAX_STEERING_WHEEL*STEERING_FACTOR ;
+    steeringAngle =  (static_cast<double>(newSteeringAngle)-MAX_VAL_2)/MAX_VAL_2*STEERING_FACTOR ;
     OutputInterface->send_steering(steeringAngle) ;
+    OutputWindow->setSteeringAngle(steeringAngle) ;
 }
 
-void Model::setSpeedSetpoint(int16_t speedSetpoint)
+void Model::setSpeedSetpoint(uint16_t speedSetpoint)
 {
-    SpeedSetpoint = ((double)speedSetpoint/MAX_VAL)*2*V_MAX_MOTOR ; //2 because int goes only until 0x7FFF
-    std::cout<<SpeedSetpoint<<std::endl ;
-    printf("%lf\n",SpeedSetpoint) ;
+    SpeedSetpoint = ((static_cast<double>(speedSetpoint)-MAX_VAL_2)/MAX_VAL_2)*V_MAX_MOTOR ; //2 because int goes only until 0x7FFF
+    std::cout<<"Speed: "<<std::hex<<speedSetpoint<<std::endl;
+    std::cout<<"Speed: "<<SpeedSetpoint<<std::endl;
 }
 
-void Model::setTorqueSetpoint(int16_t torqueSetpoint)
+void Model::setTorqueSetpoint(uint16_t torqueSetpoint)
 {
-    TorqueSetpoint = ((double)torqueSetpoint/MAX_VAL)*M_MAX_MOTOR ;
+    TorqueSetpoint = (static_cast<double>(torqueSetpoint)-MAX_VAL_2)/MAX_VAL_2*M_MAX_MOTOR ;
+    std::cout<<std::hex<<"Torque: "<<std::hex<<torqueSetpoint<<std::endl;
+    std::cout<<"Torque: "<<TorqueSetpoint<<std::endl;
 }
 
 //private functions
@@ -116,7 +131,11 @@ void Model::NewTorque(void)
     if(StateOfCharge>0)
     {
         TrueTorque += TORQUE_STEP ;
-        if(TrueTorque > TorqueSetpoint)
+        if(TrueTorque >= TorqueSetpoint+TORQUE_STEP)
+            TrueTorque -= TORQUE_STEP ;
+        else if(TrueTorque<= TorqueSetpoint-TORQUE_STEP)
+            TrueTorque += TORQUE_STEP ;
+        else
             TrueTorque = TorqueSetpoint ;
     }
     else
@@ -145,16 +164,34 @@ void Model::NewAcceleration(void) //VSI
     if (TrueSpeed <= 0)
     {
         acceleration[LONGITUDINAL] = 0;
-       // TrueTorque = 0 ;
+        TrueTorque = 0 ;
         netSpeed = 0 ;
         TrueSpeed = 0 ;
     }
     else if(TrueSpeed >= SpeedSetpoint)
     {
-        acceleration[LONGITUDINAL] = 0;
-        TrueTorque = 0;
         TrueSpeed = SpeedSetpoint ;
-        netSpeed = TrueSpeed*(PI*WHEEL_DIAMETER)/REDUCTION_FACTOR;
+        netSpeed = TrueSpeed*(PI*WHEEL_DIAMETER)/(REDUCTION_FACTOR) ;
+        acceleration[LONGITUDINAL] = 0 ;
+        TrueTorque = 0 ;
+//        if(acceleration[LONGITUDINAL]>=0)
+//        {
+
+//            netSpeed -= acceleration[LONGITUDINAL]*DELTA_T ;
+//            TrueSpeed = netSpeed/(PI*WHEEL_DIAMETER)*REDUCTION_FACTOR ;
+//            if(TrueSpeed >= SpeedSetpoint)
+//            {
+//                TrueTorque = 0;
+//                netSpeed -= acceleration[LONGITUDINAL]*DELTA_T-FRICTION ;
+//                TrueSpeed = netSpeed/(PI*WHEEL_DIAMETER)*REDUCTION_FACTOR ;
+//                acceleration[LONGITUDINAL] = -acceleration[LONGITUDINAL]+FRICTION ;
+//            }
+//            else
+//            {
+//                TrueTorque = 0;
+//                acceleration[LONGITUDINAL] = 0;
+//            }
+//        }
     }
 
     OutputPower = TrueTorque*TrueSpeed/(60*2*PI) ;
@@ -171,8 +208,8 @@ void Model::NewWheelSpeed(void)
     //       else formula
     WheelSpeed[FR] = netSpeed/(PI*WHEEL_DIAMETER)*(1-TRACKWIDTH_FRONT/WHEEL_BASE*tan(steeringAngle)) ;
     WheelSpeed[FL] = netSpeed/(PI*WHEEL_DIAMETER)*(1+TRACKWIDTH_FRONT/WHEEL_BASE*tan(steeringAngle)) ;
-    WheelSpeed[RR] = netSpeed/(PI*WHEEL_DIAMETER)*(1-TRACKWIDTH_REAR/WHEEL_BASE*tan(steeringAngle)) ;
-    WheelSpeed[RL] = netSpeed/(PI*WHEEL_DIAMETER)*(1+TRACKWIDTH_REAR/WHEEL_BASE*tan(steeringAngle)) ;
+    WheelSpeed[RR] = (SLIP_SPEED+1)*netSpeed/(PI*WHEEL_DIAMETER)*(1-TRACKWIDTH_REAR/WHEEL_BASE*tan(steeringAngle)) ;
+    WheelSpeed[RL] = (SLIP_SPEED+1)*netSpeed/(PI*WHEEL_DIAMETER)*(1+TRACKWIDTH_REAR/WHEEL_BASE*tan(steeringAngle)) ;
 
     WheelTorque[FR] = 0 ;
     WheelTorque[FL] = 0 ;

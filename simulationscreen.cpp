@@ -1,6 +1,9 @@
 #include "simulationscreen.h"
 #include "ui_simulationscreen.h"
 
+#include "constants.h"
+#include <iostream>
+
 simulationScreen::simulationScreen(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::simulationScreen)
@@ -50,4 +53,13 @@ void simulationScreen::UpdateScreen(double WheelSpeed[4],double WheelTorque[4], 
     ui->speed_motor->setText(buffer) ;
     buffer.sprintf(("%.2lf Nm\n"),MotorTroque) ;
     ui->torque->setText(buffer) ;
+}
+
+void simulationScreen::setSteeringAngle(double angle)
+{
+    QString buffer ;
+
+    buffer.sprintf("%.2lf\xB0\n",angle*180/PI) ;
+    ui->angle_fl->setText(buffer) ;
+    ui->angle_fr->setText(buffer) ;
 }

@@ -17,8 +17,12 @@ public:
     explicit simulationScreen(QWidget *parent = nullptr);
     ~simulationScreen();
 
-    void UpdateScreen(double WheelSpeed[4],double WheelTorque[4], double MotorSpeed,double MotorTroque,double StateOfCharge);
-
+    void UpdateScreen(double WheelSpeed[4],
+                      double WheelTorque[4],
+                      double MotorSpeed,
+                      double MotorTroque,
+                      double StateOfCharge);
+    void setSteeringAngle(double angle) ;
 private:
     Ui::simulationScreen *ui;
 };

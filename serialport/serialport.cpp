@@ -107,9 +107,9 @@ int SerialPort::connect()
     }
 
     // Deliberately made rather slow to match Linux settings (which cannot be made faster).
-    mTimeOuts.ReadIntervalTimeout         = 25;
+    mTimeOuts.ReadIntervalTimeout         = 10;
     mTimeOuts.ReadTotalTimeoutMultiplier  = 0;      // 1
-    mTimeOuts.ReadTotalTimeoutConstant    = 100;    // 15
+    mTimeOuts.ReadTotalTimeoutConstant    = 30;    // 15
     mTimeOuts.WriteTotalTimeoutMultiplier = 1;
     mTimeOuts.WriteTotalTimeoutConstant   = 250;
 

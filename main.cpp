@@ -4,12 +4,15 @@
 #include "connectionmonitor.h"
 
 #include "model.h"
+#include "constants.h"
 
 #include <iostream>
 #include <stdint.h>
 #include <QApplication>
 #include <QThread>
 #include <QObject>
+
+using namespace std ;
 
 namespace
 {
@@ -20,6 +23,8 @@ namespace
     static ConnectionMonitor *EPuckMonitor ;
 
     static Model *Simulation ;
+
+    static bool UseEpuck ;
 }
 
 // callback functions
@@ -70,8 +75,8 @@ void accelerator_cb(int AcceleratorPedal)
 
 void cruise_cb(int MaxSpeed)
 {
-    printf("%d\n",MaxSpeed) ;
-    //Simulation->setSpeedSetpoint(MaxSpeed);
+    MaxSpeed = MaxSpeed*MAX_VAL_2/MAX_SPEED+MAX_VAL_2 ;
+   // Simulation->setSpeedSetpoint(static_cast<uint16_t>(MaxSpeed));
     //send to sensor unit??
 }
 
@@ -87,23 +92,44 @@ void TS_cb(void)
 
 void useEpuck_cb(int use)
 {
-    //config Sensor unit
+    UseEpuck = static_cast<bool>(use) ;
 }
 
 void steering_cb(int SteeringAngle)
 {
-    Simulation->setSteeringAngle(SteeringAngle) ;
+    SteeringAngle = SteeringAngle*MAX_VAL/MAX_STEERING_WHEEL;
+    if(!UseEpuck)
+        Simulation->setSteeringAngle(SteeringAngle) ;
 }
 
-void speed_cb(int16_t data)
+void speed_cb(uint16_t data)
 {
-
     Simulation->setSpeedSetpoint(data) ;
 }
 
-void torque_cb(int16_t data)
+void torque_cb(uint16_t data)
 {
     Simulation->setTorqueSetpoint(data) ;
+}
+
+void state_cb(uint8_t data)
+{
+    //show state
+}
+
+void angle_cb(uint16_t data)
+{
+    if(UseEpuck)
+        Simulation->setSteeringAngle(data) ;
+}
+
+void quit_cb(void)
+{
+    EPuckMonitor->ConnectMotor("0") ;
+    EPuckMonitor->ConnectSensor("0") ;
+    EPuckMonitor->ConnectECU("0") ;
+
+    QApplication::quit() ;
 }
 
 int main(int argc, char *argv[])
@@ -115,7 +141,9 @@ int main(int argc, char *argv[])
     Connection = new ConnectionScreen ;
     EPuckMonitor = new ConnectionMonitor ;
 
-    Simulation = new Model(EPuckMonitor, SimulationScreen) ;
+    Simulation = new Model(EPuckMonitor,
+                           SimulationScreen,
+                           Cockpit) ;
     Cockpit->setCallbacks(startStop_cb,
                           restart_cb,
                           driveMode_cb,
@@ -126,18 +154,24 @@ int main(int argc, char *argv[])
                           drive_cb,
                           TS_cb,
                           useEpuck_cb,
-                          steering_cb) ;
+                          steering_cb,
+                          quit_cb) ;
     Connection->setCallbacks(motor_cb, sensor_cb, ECU_cb) ;
 
 
 
-    EPuckMonitor->init(Connection, speed_cb, torque_cb) ;
+    EPuckMonitor->init(Connection,
+                       speed_cb,
+                       torque_cb,
+                       state_cb,
+                       angle_cb) ;
 
     SimulationScreen->show() ;
     Cockpit->show() ;
     Connection->show() ;
 
     return a.exec();
+
 }
 
 

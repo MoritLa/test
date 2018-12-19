@@ -27,7 +27,10 @@ public:
                       CockpitButtonCallbackFP extDrive,
                       CockpitButtonCallbackFP extTS,
                       CockpitValueCallbackFP extUseEpuck,
-                      CockpitValueCallbackFP extSteering) ;
+                      CockpitValueCallbackFP extSteering,
+                      CockpitButtonCallbackFP extQuit) ;
+    void setStartButton(bool simulate);
+    void setSteering(int angle) ;
 private slots:
     void startStop(void);
     void restart(void) ;
@@ -40,6 +43,7 @@ private slots:
     void TS_cb(void) ;
     void useEpuck(int use) ;
     void steering_cb(int SteeringAngle) ;
+    void quit_cb(void) ;
 private:
     CockpitButtonCallbackFP extStartStop_cb;
     CockpitButtonCallbackFP extRestart_cb ;
@@ -52,7 +56,10 @@ private:
     CockpitButtonCallbackFP extTS_cb ;
     CockpitValueCallbackFP extUseEpuck_cb ;
     CockpitValueCallbackFP extSteering_cb ;
+    CockpitButtonCallbackFP extQuit_cb ;
+
     Ui::CockpitScreen *ui;
+    bool useSlider = 1;
 };
 
 #endif // COCKPITSCREEN_H
