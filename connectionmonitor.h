@@ -35,6 +35,7 @@ private slots:
     void ReadBuffer(void) ;
 public:
     ConnectionMonitor();
+    ~ConnectionMonitor() ;
 
     void init(ConnectionScreen *extDisplay,
               ReceiveCallback16FP speed_cb,

@@ -29,6 +29,11 @@ void ConnectionMonitor::init(ConnectionScreen *extDisplay,
     extAngle_cb = angle_cb ;
 }
 
+ConnectionMonitor::~ConnectionMonitor()
+{
+    StopReceiving() ;
+}
+
 void ConnectionMonitor::ConnectMotor(QString port)
 {
     uint8_t out[2] = {TYPE_ID,TYPE_LENGTH} ;
@@ -305,9 +310,9 @@ void ConnectionMonitor::send_Pedals(double breakPedal, double accelerationPedal)
     char output[MAX_UART_MESSAGE_LENGTH];
     uint16_t outdata ;
     //conversion not from float to uint8_t and to output format
-    outdata = breakPedal*MAX_VAL/MAX_BREAK_PEDAL;
+    outdata = breakPedal*MAX_VAL;
     output[2] = outdata; output[3] = outdata>>8;
-    outdata = accelerationPedal*MAX_VAL/MAX_ACCELERATION_PEDAL;
+    outdata = accelerationPedal*MAX_VAL;
     output[4] = outdata; output[5] = outdata>>8;
     output[0] = headers_S[SENSOR][PEDALS].id ; output[1] = headers_S[SENSOR][PEDALS].length ;
 
@@ -320,7 +325,7 @@ void ConnectionMonitor::send_steering(double steeringAngle)
     char output[MAX_UART_MESSAGE_LENGTH];
     uint16_t outdata ;
     //conversion not from float to uint8_t and to output format
-    outdata = steeringAngle*MAX_VAL/STEERING_FACTOR ;
+    outdata = steeringAngle*MAX_VAL_2/STEERING_FACTOR+MAX_VAL_2 ;
     output[2] = outdata; output[3] = outdata>>8;
     output[0] = headers_S[SENSOR][STEERING].id ; output[1] = headers_S[SENSOR][STEERING].length ;
 
@@ -341,17 +346,8 @@ void ConnectionMonitor::ReadBuffer(void)
 
     while(!Motor.receiveBuffer(id, 2))
     {
-        i++;
-        if (i>10)
-        {
-
-            break ;
-        }
-        std::cout<<hex<<"Motor: "<<(static_cast<int>(id[0])&0xFF)<<endl;
-
         Motor.receiveBuffer(&length,1) ;
-        Motor.receiveBuffer(data,length) ;
-
+        Motor.receiveBuffer(data,static_cast<unsigned int>(length)&0xFF) ;
         if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
             return ;
         switch (static_cast<int>(id[0])&0xFF)
@@ -360,39 +356,27 @@ void ConnectionMonitor::ReadBuffer(void)
 
             if(length == headers_R[MOTOR][SPEED_SETPOINT].length)
             {
-                data16 = data[0]+(data[1]<<8) ;
+                data16 = (static_cast<int>(data[0])&0xFF)+((static_cast<int>(data[1])&0xFF)<<8) ;
                 extSpeed_cb(data16);
             }
             break;
         case TORQUE_SETPOINT_ID:
             if(length == headers_R[MOTOR][TORQUE_SETPOINT].length)
             {
-                data16 = data[0]+(data[1]<<8) ;
+                data16 = (static_cast<int>(data[0])&0xFF)+((static_cast<int>(data[1])&0xFF)<<8) ;
                 extTorque_cb(data16);
             } break;
-        case SYSTEM_STATE_ID:
-            if(length == headers_R[ECU][SYSTEM_STATE].length)
-            {
-                data8 = data[0] ;
-                extState_cb(data8) ;
-            } break;
-        case STEERING_ANGLE_ID:
-            if(length == headers_S[SENSOR][STEERING_ANGLE].length)
-            {
-                data16 = data[0]+(data[1]<<8) ;
-                extAngle_cb(data16) ;
-            }
-            break;
         default: break;
         }
+        if (i>10)
+            break ;
+        i++;
     }
 
-    std::cout<<"Timer: "<<timing.elapsed() - time_elapsed<<endl<<"i: "<<i<<endl ;
-    time_elapsed =timing.elapsed() ;
+
     i = 0 ;
-    if(!Sensor.receiveBuffer(id, 2))
+    while(!Sensor.receiveBuffer(id, 2))
     {
-        std::cout<<hex<<"Sensor: "<<static_cast<int>(id[0])<<endl;
         Sensor.receiveBuffer(&length,1) ;
         Sensor.receiveBuffer(data,length) ;
 
@@ -403,18 +387,20 @@ void ConnectionMonitor::ReadBuffer(void)
         case STEERING_ANGLE_ID:
             if(length == headers_S[SENSOR][STEERING_ANGLE].length)
             {
-                data16 = data[0]+(data[1]<<8) ;
+                data16 = (static_cast<int>(data[0])&0xFF)+((static_cast<int>(data[1])&0xFF)<<8) ;
                 extAngle_cb(data16) ;
             }
             break;
         default: break;
         }
+        if (i>10)
+            break ;
+        i++;
     }
+    i = 0;
 
-
-    if(!Ecu.receiveBuffer(id, 2))
+    while(!Ecu.receiveBuffer(id, 2))
     {
-        std::cout<<hex<<"ECU: "<<static_cast<int>(id[0])<<endl;
         Ecu.receiveBuffer(&length,1) ;
         Ecu.receiveBuffer(data,length) ;
 
@@ -430,6 +416,10 @@ void ConnectionMonitor::ReadBuffer(void)
             } break;
         default: break;
         }
+        if (i>10)
+            break ;
+        i++;
     }
-
+    std::cout<<"Timer: "<<timing.elapsed() - time_elapsed<<endl;
+    time_elapsed =timing.elapsed() ;
 }

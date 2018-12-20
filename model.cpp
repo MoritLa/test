@@ -55,7 +55,7 @@ void Model::pause(void)
 
     if (simulate)
     {
-        timer.start(500) ;
+        timer.start(10) ;
         OutputInterface->StartReceiving();
     }
     else
@@ -114,15 +114,15 @@ void Model::setSteeringAngle(int newSteeringAngle)
 void Model::setSpeedSetpoint(uint16_t speedSetpoint)
 {
     SpeedSetpoint = ((static_cast<double>(speedSetpoint)-MAX_VAL_2)/MAX_VAL_2)*V_MAX_MOTOR ; //2 because int goes only until 0x7FFF
-    std::cout<<"Speed: "<<std::hex<<speedSetpoint<<std::endl;
-    std::cout<<"Speed: "<<SpeedSetpoint<<std::endl;
+//    std::cout<<"Speed: "<<std::hex<<speedSetpoint<<std::endl;
+//    std::cout<<"Speed: "<<SpeedSetpoint<<std::endl;
 }
 
 void Model::setTorqueSetpoint(uint16_t torqueSetpoint)
 {
     TorqueSetpoint = (static_cast<double>(torqueSetpoint)-MAX_VAL_2)/MAX_VAL_2*M_MAX_MOTOR ;
-    std::cout<<std::hex<<"Torque: "<<std::hex<<torqueSetpoint<<std::endl;
-    std::cout<<"Torque: "<<TorqueSetpoint<<std::endl;
+//    std::cout<<std::hex<<"Torque: "<<std::hex<<torqueSetpoint<<std::endl;
+//    std::cout<<"Torque: "<<TorqueSetpoint<<std::endl;
 }
 
 //private functions
@@ -130,7 +130,6 @@ void Model::NewTorque(void)
 {
     if(StateOfCharge>0)
     {
-        TrueTorque += TORQUE_STEP ;
         if(TrueTorque >= TorqueSetpoint+TORQUE_STEP)
             TrueTorque -= TORQUE_STEP ;
         else if(TrueTorque<= TorqueSetpoint-TORQUE_STEP)

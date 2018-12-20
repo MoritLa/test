@@ -107,9 +107,9 @@ int SerialPort::connect()
     }
 
     // Deliberately made rather slow to match Linux settings (which cannot be made faster).
-    mTimeOuts.ReadIntervalTimeout         = 10;
+    mTimeOuts.ReadIntervalTimeout         = 5;
     mTimeOuts.ReadTotalTimeoutMultiplier  = 0;      // 1
-    mTimeOuts.ReadTotalTimeoutConstant    = 30;    // 15
+    mTimeOuts.ReadTotalTimeoutConstant    = 10;    // 15
     mTimeOuts.WriteTotalTimeoutMultiplier = 1;
     mTimeOuts.WriteTotalTimeoutConstant   = 250;
 
@@ -213,7 +213,7 @@ int SerialPort::receiveBuffer(char *buffer, const unsigned length)
     unsigned long bytesRead = 0, totalRead = 0;
     unsigned counter = 0;
 
-    while(totalRead < length && counter < 50)
+    while(totalRead < length && counter < 1)
     {
         if(!ReadFile(mHandle, buffer + totalRead, length - totalRead, &bytesRead, NULL) || !bytesRead)
 

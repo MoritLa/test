@@ -8,16 +8,16 @@
 
 #define STEERING_FACTOR         0.3         //[rad]
 
-#define TORQUE_STEP         10             //[Nm]
+#define TORQUE_STEP         5             //[Nm]
 #define REDUCTION_FACTOR    (64/13)
 #define EFFICIENCY          0.95
 #define WHEEL_DIAMETER      0.508           //[m]
 #define MU                  0.7
 #define CAR_MASS            300             //[kg]
 #define FN                  (CAR_MASS*9.81) //[N]
-#define DELTA_T             0.50           //[s]
+#define DELTA_T             0.01           //[s]
 #define WHEEL_BASE          1.525           //[m]
-#define BREAK_FACTOR        300             //[N]
+#define BREAK_FACTOR        600             //[N]
 #define BREAK_FACTOR_M      300             //[N]
 #define TRACKWIDTH_FRONT    1.5             //[m]
 #define TRACKWIDTH_REAR     1.5             //[m]

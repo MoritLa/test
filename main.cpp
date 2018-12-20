@@ -125,9 +125,7 @@ void angle_cb(uint16_t data)
 
 void quit_cb(void)
 {
-    EPuckMonitor->ConnectMotor("0") ;
-    EPuckMonitor->ConnectSensor("0") ;
-    EPuckMonitor->ConnectECU("0") ;
+    EPuckMonitor->StopReceiving() ;
 
     QApplication::quit() ;
 }
