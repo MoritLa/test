@@ -378,21 +378,25 @@ void ConnectionMonitor::ReadBuffer(void)
     while(!Sensor.receiveBuffer(id, 2))
     {
         Sensor.receiveBuffer(&length,1) ;
-        Sensor.receiveBuffer(data,length) ;
+        Sensor.receiveBuffer(data,static_cast<unsigned int>(length)&0xFF) ;
 
         if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
             return ;
+
         switch (static_cast<int>(id[0])&0xFF)
         {
         case STEERING_ANGLE_ID:
-            if(length == headers_S[SENSOR][STEERING_ANGLE].length)
+
+            if(length == headers_R[SENSOR][STEERING_ANGLE].length)
             {
                 data16 = (static_cast<int>(data[0])&0xFF)+((static_cast<int>(data[1])&0xFF)<<8) ;
                 extAngle_cb(data16) ;
+                cout<<"Sensor: "<<data16<<endl;
             }
             break;
         default: break;
         }
+
         if (i>10)
             break ;
         i++;
@@ -402,7 +406,7 @@ void ConnectionMonitor::ReadBuffer(void)
     while(!Ecu.receiveBuffer(id, 2))
     {
         Ecu.receiveBuffer(&length,1) ;
-        Ecu.receiveBuffer(data,length) ;
+        Ecu.receiveBuffer(data,static_cast<unsigned int>(length)&0xFF) ;
 
         if ((static_cast<int>(id[1])&0xFF) != ID_HIGH)
             return ;

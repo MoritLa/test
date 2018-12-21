@@ -223,7 +223,7 @@ int SerialPort::receiveBuffer(char *buffer, const unsigned length)
 
     if (totalRead < length)
     {
-        std::cerr << "SerialPort - ReceiveBuffer - Read " << totalRead << " bytes, expected " << length << std::endl;
+       // std::cerr << "SerialPort - ReceiveBuffer - Read " << totalRead << " bytes, expected " << length << std::endl;
         return 2;
     }
     return 0;
